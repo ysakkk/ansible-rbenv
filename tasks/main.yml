@@ -1,0 +1,40 @@
+- name: "install packages"
+  yum:
+    name: "{{ packages }}"
+
+- stat:
+    path: "~.anyenv/envs/rbenv"
+  register: rbenv_is_installed
+
+- name: "install rbenv"
+  command: "anyenv install -s rbenv"
+  changed_when: False
+  when: rbenv_is_installed.stat.exists == false
+
+- name: "ruby version check"
+  shell: bash -lc "( cd {{ local_dir }} && ruby --version | grep {{ version }})"
+  changed_when: False
+  register: ruby
+
+- name: "install ruby {{ version }}"
+  shell: bash -lc "rbenv install -s {{ version }}"
+  changed_when: False
+
+- name: "rbenv local {{ version }}"
+  lineinfile:
+    path: "{{ local_dir }}/.ruby-version"
+    create: "yes"
+    line: "{{ version }}"
+
+- name: "gem info -i serverspec"
+  shell: bash -lc "( cd {{ local_dir }} && gem info -i serverspec)"
+  ignore_errors: "yes"
+  changed_when: False
+  register: serverspec
+
+- name: "gem install serverspec"
+  shell: bash -lc "( cd {{ local_dir }} && gem install serverspec)"
+  when: 
+    - ruby.rc == 0 
+    - serverspec.rc == 1
+

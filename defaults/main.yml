@@ -1,0 +1,6 @@
+version: "2.6.5"
+local_dir: "/etc/ansible"
+
+packages:
+  - openssl-devel 
+  - readline-devel
